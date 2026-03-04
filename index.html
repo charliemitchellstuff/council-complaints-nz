@@ -101,10 +101,9 @@
         slots = [];
         const container = document.getElementById('container');
         
-        // Step sizes define the base grid. 
-        // Lower numbers = more potential columns/rows.
-        const stepX = 210; 
-        const stepY = 155; 
+        // Increased step sizes to ensure spread
+        const stepX = 240; 
+        const stepY = 165; 
 
         const columns = Math.floor(container.offsetWidth / stepX);
         const rows = Math.floor(container.offsetHeight / stepY);
@@ -137,13 +136,11 @@
                 calculateGrid();
                 window.addEventListener('resize', calculateGrid);
                 
-                // Initial burst to populate screen
-                spawn();
-                setTimeout(spawn, 600);
-                setTimeout(spawn, 1200);
-                
-                // Regular cycle
-                setInterval(spawn, 1800); 
+                // MEASURED START: Wait 1s, spawn 1st, then interval for the rest
+                setTimeout(() => {
+                    spawn(); 
+                    setInterval(spawn, 2200); 
+                }, 1000);
             }
         } catch (err) { console.error(err); }
     }
@@ -162,10 +159,9 @@
         const div = document.createElement('div');
         div.className = 'complaint';
         
-        // --- ORGANIC NUDGE LOGIC ---
-        // Adds variability so items don't align like a rigid table
-        const nudgeX = (Math.random() * 50) - 25; // Left/Right up to 25px
-        const nudgeY = (Math.random() * 30) - 15; // Up/Down up to 15px
+        // --- ORGANIC NUDGE ---
+        const nudgeX = (Math.random() * 50) - 25; 
+        const nudgeY = (Math.random() * 30) - 15; 
         
         div.style.left = `${slot.x + nudgeX}px`;
         div.style.top = `${slot.y + nudgeY}px`;
@@ -176,7 +172,7 @@
 
         setTimeout(() => div.classList.add('visible'), 50);
 
-        const visibleDuration = 6000; // Visible for 6 seconds
+        const visibleDuration = 6500; // Visible for 6.5s to maintain 3-4 items on screen
 
         setTimeout(() => { div.style.opacity = '0'; }, visibleDuration);
         setTimeout(() => {
