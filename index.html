@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Complaint Feed | The Press</title>
+    <style>
+        :root {
+            --press-red: #e31b23; 
+            --bg-gray: #fcfcfc; 
+            --box-width: 250px;
+            --box-height: 140px;
+        }
+
+        body { 
+            margin: 0; 
+            background: var(--bg-gray); 
+            color: #1a1a1a; 
+            font-family: Roboto, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            overflow: hidden; 
+            height: 100vh; 
+            /* Signature Red Accent remains as the only constant anchor */
+            border-top: 4px solid var(--press-red); 
+        }
+
+        #container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            box-sizing: border-box;
+            padding: 10px;
+        }
+
+        .complaint {
+            position: absolute;
+            width: var(--box-width);
+            padding: 16px; 
+            background: #ffffff;
+            border-top: 3px solid var(--press-red);
+            font-family: 'Georgia', serif; 
+            font-size: 0.98rem;
+            line-height: 1.5;
+            color: #222;
+            opacity: 0;
+            transition: opacity 0.5s ease-in, transform 0.6s cubic-bezier(0.19, 1, 0.22, 1);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.06);
+            z-index: 10;
+            box-sizing: border-box; 
+        }
+
+        .visible {
+            opacity: 1;
+            transform: translateY(-8px);
+        }
+
+        .label {
+            display: block;
+            font-family: Roboto, sans-serif;
+            font-size: 0.6rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            color: #757575;
+            margin-bottom: 9px;
+            letter-spacing: 1.1px;
+        }
+
+        .text-content {
+            display: -webkit-box;
+            -webkit-line-clamp: 4; 
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            font-weight: normal; 
+            font-style: normal;
+        }
+    </style>
+</head>
+<body>
+
+<div id="container"></div>
+
+<script>
+    const GIST_URL = 'https://gist.githubusercontent.com/charliemitchellstuff/e773c93b47513065379147179bfc48d5/raw/2fb29efdd1e6ac80a67dfdff64c177b893b15bac/complaints.txt';
+    
+    let allComplaints = [];
+    let availableComplaints = [];
+    let slots = []; 
+
+    function calculateGrid() {
+        slots = [];
+        const container = document.getElementById('container');
+        const stepX = 270; 
+        const stepY = 175; 
+
+        const columns = Math.floor(container.offsetWidth / stepX);
+        const rows = Math.floor(container.offsetHeight / stepY);
+
+        const xOffset = (container.offsetWidth - (columns * stepX)) / 2;
+        const yOffset = (container.offsetHeight - (rows * stepY)) / 2;
+
+        for (let r = 0; r < rows; r++) {
+            for (let c = 0; c < columns; c++) {
+                slots.push({
+                    x: c * stepX + xOffset + 15,
+                    y: r * stepY + yOffset + 20, 
+                    inUse: false
+                });
+            }
+        }
+    }
+
+    async function init() {
+        try {
+            const response = await fetch(GIST_URL);
+            const text = await response.text();
+            allComplaints = text.split('\n')
+                .map(c => c.trim())
+                .filter(c => c.length > 8); 
+            
+            availableComplaints = [...allComplaints];
+            
+            if (allComplaints.length > 0) {
+                calculateGrid();
+                window.addEventListener('resize', calculateGrid);
+                spawn();
+                setInterval(spawn, 1300); 
+            }
+        } catch (err) { console.error(err); }
+    }
+
+    function spawn() {
+        const availableSlots = slots.filter(s => !s.inUse);
+        if (availableSlots.length === 0 || availableComplaints.length === 0) return;
+
+        const slot = availableSlots[Math.floor(Math.random() * availableSlots.length)];
+        slot.inUse = true;
+
+        const textIndex = Math.floor(Math.random() * availableComplaints.length);
+        const selectedText = availableComplaints.splice(textIndex, 1)[0];
+
+        const container = document.getElementById('container');
+        const div = document.createElement('div');
+        div.className = 'complaint';
+        div.style.left = `${slot.x}px`;
+        div.style.top = `${slot.y}px`;
+        div.innerHTML = `<span class="label">Complaint</span><div class="text-content">${selectedText}</div>`;
+        
+        container.appendChild(div);
+
+        setTimeout(() => div.classList.add('visible'), 50);
+
+        const visibleDuration = 5000; 
+
+        setTimeout(() => { div.style.opacity = '0'; }, visibleDuration);
+        setTimeout(() => {
+            div.remove();
+            slot.inUse = false;
+            availableComplaints.push(selectedText);
+        }, visibleDuration + 1000);
+    }
+
+    init();
+</script>
+
+</body>
+</html>
