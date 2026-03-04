@@ -19,7 +19,6 @@
             font-family: Roboto, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
             overflow: hidden; 
             height: 100vh; 
-            /* Signature Red Accent remains as the only constant anchor */
             border-top: 4px solid var(--press-red); 
         }
 
@@ -42,6 +41,7 @@
             line-height: 1.5;
             color: #222;
             opacity: 0;
+            /* Smooth pop and fade */
             transition: opacity 0.5s ease-in, transform 0.6s cubic-bezier(0.19, 1, 0.22, 1);
             box-shadow: 0 10px 30px rgba(0,0,0,0.06);
             z-index: 10;
@@ -72,6 +72,18 @@
             font-weight: normal; 
             font-style: normal;
         }
+
+        /* --- MOBILE OPTIMIZATION --- */
+        @media (max-width: 600px) {
+            :root {
+                --box-width: 180px;
+                --box-height: 120px;
+            }
+            .complaint {
+                padding: 10px;
+                font-size: 0.85rem;
+            }
+        }
     </style>
 </head>
 <body>
@@ -88,8 +100,11 @@
     function calculateGrid() {
         slots = [];
         const container = document.getElementById('container');
-        const stepX = 270; 
-        const stepY = 175; 
+        
+        // Step sizes define the base grid. 
+        // Lower numbers = more potential columns/rows.
+        const stepX = 230; 
+        const stepY = 155; 
 
         const columns = Math.floor(container.offsetWidth / stepX);
         const rows = Math.floor(container.offsetHeight / stepY);
@@ -100,8 +115,8 @@
         for (let r = 0; r < rows; r++) {
             for (let c = 0; c < columns; c++) {
                 slots.push({
-                    x: c * stepX + xOffset + 15,
-                    y: r * stepY + yOffset + 20, 
+                    x: c * stepX + xOffset,
+                    y: r * stepY + yOffset,
                     inUse: false
                 });
             }
@@ -121,8 +136,14 @@
             if (allComplaints.length > 0) {
                 calculateGrid();
                 window.addEventListener('resize', calculateGrid);
+                
+                // Initial burst to populate screen
                 spawn();
-                setInterval(spawn, 1300); 
+                setTimeout(spawn, 600);
+                setTimeout(spawn, 1200);
+                
+                // Regular cycle
+                setInterval(spawn, 1800); 
             }
         } catch (err) { console.error(err); }
     }
@@ -140,15 +161,22 @@
         const container = document.getElementById('container');
         const div = document.createElement('div');
         div.className = 'complaint';
-        div.style.left = `${slot.x}px`;
-        div.style.top = `${slot.y}px`;
+        
+        // --- ORGANIC NUDGE LOGIC ---
+        // Adds variability so items don't align like a rigid table
+        const nudgeX = (Math.random() * 50) - 25; // Left/Right up to 25px
+        const nudgeY = (Math.random() * 30) - 15; // Up/Down up to 15px
+        
+        div.style.left = `${slot.x + nudgeX}px`;
+        div.style.top = `${slot.y + nudgeY}px`;
+        
         div.innerHTML = `<span class="label">Complaint</span><div class="text-content">${selectedText}</div>`;
         
         container.appendChild(div);
 
         setTimeout(() => div.classList.add('visible'), 50);
 
-        const visibleDuration = 5000; 
+        const visibleDuration = 6000; // Visible for 6 seconds
 
         setTimeout(() => { div.style.opacity = '0'; }, visibleDuration);
         setTimeout(() => {
